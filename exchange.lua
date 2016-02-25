@@ -23,7 +23,7 @@ CREATE TABLE if not exists Orders
 	Id INTEGER PRIMARY KEY AUTOINCREMENT,
 	Poster TEXT NOT NULL,
 	Exchange TEXT NOT NULL,
-v	Type TEXT NOT NULL CHECK(Type IN ("buy", "sell")),
+	Type TEXT NOT NULL CHECK(Type IN ("buy", "sell")),
 	Time INTEGER NOT NULL,
 	Item TEXT NOT NULL,
 	Amount INTEGER NOT NULL CHECK(Amount > 0),
