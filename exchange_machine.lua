@@ -500,7 +500,7 @@ minetest.register_node("global_exchange:exchange", {
 	description = "Exchange",
 	tiles = {"global_exchange_atm_top.png",
 		 "global_exchange_atm_top.png",
-		 "global_exchange_atm_side.png",
+		 "global_exchange_exchange_side.png",
 	},
 	groups = {cracky=2},
 	on_rightclick = function(pos, node, clicker)
