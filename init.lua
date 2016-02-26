@@ -50,3 +50,4 @@ end)
 
 assert(loadfile(modpath .. "atm.lua"))(exchange)
 assert(loadfile(modpath .. "exchange_machine.lua"))(exchange)
+assert(loadfile(modpath .. "digital_mailbox.lua"))(exchange)

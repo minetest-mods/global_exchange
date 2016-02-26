@@ -960,7 +960,7 @@ end
 -- On failure, returns false and an error message.
 function ex_methods.view_inbox(self, p_name)
 	local db = self.db
-	local stmt = self.stmt.view_inbox_stmt
+	local stmt = self.stmts.view_inbox_stmt
 
 	stmt:bind_values(p_name)
 
