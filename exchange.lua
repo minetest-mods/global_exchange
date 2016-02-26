@@ -222,6 +222,12 @@ local summary_query = [=[
 SELECT * FROM market_summary;
 ]=]
 
+local transaction_log_query = [=[
+SELECT Time, Message FROM Log
+WHERE Recipient = :p_name
+ORDER BY Time DESC;
+]=]
+
 
 local ex_methods = {}
 local ex_meta = { __index = ex_methods }
@@ -618,7 +624,7 @@ end
 
 
 -- Returns true, or false and an error message.
-function ex_methods.cancel_order(self, p_name, id)
+function ex_methods.cancel_order(self, p_name, id, order_type, item_name, amount, rate)
 	local params = { p_name = p_name,
 			 id = id,
 	}
@@ -640,6 +646,8 @@ function ex_methods.cancel_order(self, p_name, id)
 		db:exec("ROLLBACK")
 		return false, canc_err
 	end
+
+	db:exec("COMMIT;")
 
 	return true
 end
