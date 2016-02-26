@@ -96,12 +96,12 @@ local function mk_main_fs(p_name, new_item, err_str, success)
 	local bal = exchange:get_balance(p_name)
 
 	if bal then
-		fs = fs .. "label[0.2,0.5;Balance: " .. bal
+		fs = fs .. "label[0,0;Balance: " .. bal .. "]"
 	else
 		fs = fs .. "label[0.2,0.5;Use an ATM to make your account.]"
 	end
 
-	fs = fs .. "button[6,0,2,1;your_orders;Your Orders]"
+	fs = fs .. "button[6,0;2,1;your_orders;Your Orders]"
 	fs = fs .. "field[0.2,1.5;3,1;item;Item: ;" .. item_def .. "]"
 	fs = fs .. "field[3.2,1.5;3,1;amount;Amount: ;" .. amount_def .. "]"
 	fs = fs .. "button[6,1;2,1.4;select_item;Select Item]"
@@ -232,6 +232,8 @@ local function mk_own_orders_fs(p_name, results, selected)
 	fs = fs .. table_from_results(results, 0, 2, 8, 4.5, selected or "")
 	fs = fs .. "button[0,7;2,1;cancel;Cancel]"
 	fs = fs .. "button[3,7;2,1;back;Back]"
+
+	return fs
 end
 
 
@@ -445,10 +447,26 @@ local function handle_own_orders(player, formname, fields)
 
 	if fields["cancel"] and idx then
 		local row = results[idx]
+		if not row then return true end
+		local p_inv = player:get_inventory()
+
+		local amount = row.Amount
+		local item = row.Item
+		local stack = ItemStack(item)
+		stack:set_count(amount)
+		if row.Type == "sell" then
+			if not p_inv:room_for_item("main", stack) then
+				show_own_orders(p_name, state.own_results, "Not enough room.")
+				return true
+			end
+		end
 
 		local succ, err = exchange:cancel_order(p_name, row.Id)
 		if succ then
 			table.remove(results, idx)
+			if row.Type == "sell" then
+				p_inv:add_item("main", stack)
+			end
 		else
 			-- Refresh the results, since there might have been a problem.
 			state.own_results = exchange:search_player_orders(p_name) or {}
@@ -461,7 +479,7 @@ local function handle_own_orders(player, formname, fields)
 		local event = minetest.explode_table_event(fields["result_table"])
 		if event.type == "CHG" then
 			state.selected_index = event.row - 1
-			show_own_orders(p_name, results, state.selected_index)
+			show_own_orders(p_name, results, event.row)
 		end
 	end
 

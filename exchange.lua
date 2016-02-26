@@ -115,6 +115,18 @@ AND Poster = :p_name
 ]=]
 
 
+local refund_order_query = [=[
+UPDATE Credit
+SET Balance = Balance + coalesce((
+      SELECT sum(Rate * Amount) FROM Orders
+      WHERE Poster = :p_name
+      AND Type = "buy"
+      AND Id = :id
+    ), 0)
+WHERE Owner = :p_name;
+]=]
+
+
 local search_asc_query = [=[
 SELECT * FROM Orders
 WHERE Exchange = :ex_name
@@ -192,6 +204,22 @@ local function is_integer(num)
 end
 
 
+local function exec_stmt(db, stmt, names)
+	stmt:bind_names(names)
+
+	local res = stmt:step()
+	stmt:reset()
+	
+	if res == sqlite3.BUSY then
+		return false, "Database Busy."
+	elseif res ~= sqlite3.DONE then
+		sql_error(db:errmsg())
+	else
+		return true
+	end
+end
+
+
 function exports.open_exchange(path)
 	local db = assert(sqlite3.open(path))
 
@@ -215,6 +243,7 @@ function exports.open_exchange(path)
 		del_order_stmt = assert(db:prepare(del_order_query)),
 		reduce_order_stmt = assert(db:prepare(reduce_order_query)),
 		cancel_order_stmt = assert(db:prepare(cancel_order_query)),
+		refund_order_stmt = assert(db:prepare(refund_order_query)),
 		insert_inbox_stmt = assert(db:prepare(insert_inbox_query)),
 		view_inbox_stmt = assert(db:prepare(view_inbox_query)),
 		get_inbox_stmt = assert(db:prepare(get_inbox_query)),
@@ -561,19 +590,22 @@ function ex_methods.cancel_order(self, p_name, id)
 	}
 
 	local db = self.db
-	local stmt = self.stmts.cancel_order_stmt
+	db:exec("BEGIN TRANSACTION;")
 
-	stmt:bind_values(params)
+	local refund_stmt = self.stmts.refund_order_stmt
+	local cancel_stmt = self.stmts.cancel_order_stmt
 
-	local res = stmt:step()
-	if res == sqlite3.BUSY then
-		stmt:reset()
-		return false, "Database busy."
-	elseif res ~= sqlite3.DONE then
-		sql_error(db:errmsg())
+	local ref_succ, ref_err = exec_stmt(db, refund_stmt, params)
+	if not ref_succ then
+		db:exec("ROLLBACK")
+		return false, ref_err
 	end
 
-	stmt:reset()
+	local canc_succ, canc_err = exec_stmt(db, cancel_stmt, params)
+	if not canc_succ then
+		db:exec("ROLLBACK")
+		return false, canc_err
+	end
 
 	return true
 end
@@ -789,6 +821,7 @@ function ex_methods.sell(self, p_name, ex_name, item_name, amount, rate)
 	db:exec("BEGIN TRANSACTION");
 	
 	local remaining = amount
+	local revenue = 0
 
 	local del_stmt = self.stmts.del_order_stmt
 	local red_stmt = self.stmts.reduce_order_stmt
@@ -847,6 +880,7 @@ function ex_methods.sell(self, p_name, ex_name, item_name, amount, rate)
 			end
 
 			remaining = remaining - row_amount
+			revenue = revenue + row_amount * row.Rate
 		else -- row_amount > remaining
 			red_stmt:bind_values(remaining, row.Id)
 
@@ -891,6 +925,7 @@ function ex_methods.sell(self, p_name, ex_name, item_name, amount, rate)
 			end
 
 			remaining = 0
+			revenue = revenue + remaining * row.Rate
 		end
 
 		if remaining == 0 then break end
@@ -898,8 +933,6 @@ function ex_methods.sell(self, p_name, ex_name, item_name, amount, rate)
 
 	search_stmt:reset()
 
-	local sold = amount - remaining
-	local revenue = sold * rate
 	local ch_succ, ch_err = self:change_balance(p_name, revenue)
 	if not ch_succ then
 		db:exec("ROLLBACK;")
