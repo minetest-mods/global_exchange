@@ -42,8 +42,9 @@ end
 
 local function mk_mail_fs(p_name, results, err_str)
 	fs = "size[6,8]"
+	fs = fs .. "label[0,0;Inbox]"
 	if err_str then
-		fs = fs .. "label[0,0;Error: " .. err_str .. "]"
+		fs = fs .. "label[3,0;Error: " .. err_str .. "]"
 	end
 	fs = fs .. mk_inbox_list(results, 0, 1, 6, 6)
 	fs = fs .. "button[0,7;2,1;claim;Claim]"
@@ -119,4 +120,14 @@ minetest.register_node("global_exchange:mailbox", {
 		mailbox_contents[p_name] = res
 		minetest.show_formspec(p_name, mailbox_form, mk_mail_fs(p_name, res))
 	end,
+})
+
+
+minetest.register_craft( {
+	output = "global_exchange:mailbox",
+	recipe = {
+		{ "default:steel_ingot", "default:steel_ingot", "default:steel_ingot" },
+		{ "default:steel_ingot", "default:gold_ingot", "default:steel_ingot" },
+		{ "default:steel_ingot", "default:steel_ingot", "default:steel_ingot" },
+	}
 })
