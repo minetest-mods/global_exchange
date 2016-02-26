@@ -43,6 +43,7 @@ minetest.register_globalstep(function(dtime)
 	elapsed = elapsed + dtime
 	if elapsed >= summary_interval then
 		summary_fs = mk_summary_fs()
+		elapsed = 0
 	end
 end)
 
