@@ -289,6 +289,7 @@ function exports.open_exchange(path)
 		red_inbox_stmt = assert(db:prepare(red_inbox_query)),
 		del_inbox_stmt = assert(db:prepare(del_inbox_query)),
 		summary_stmt = assert(db:prepare(summary_query)),
+		transaction_log_stmt = assert(db:prepare(transaction_log_query)),
 	}
 
 	
@@ -645,6 +646,19 @@ function ex_methods.cancel_order(self, p_name, id, order_type, item_name, amount
 	if not canc_succ then
 		db:exec("ROLLBACK")
 		return false, canc_err
+	end
+
+	local message = "Cancelled an order to " ..
+		order_type .. " " .. amount .. " " .. item_name .. "."
+
+	if order_type == "buy" then
+		message = message .. " (+" .. amount * rate .. ")"
+	end
+
+	local succ, err = self:log(message, p_name)
+	if not succ then
+		db:exec("ROLLBACK")
+		return false, err
 	end
 
 	db:exec("COMMIT;")
