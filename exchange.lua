@@ -50,6 +50,9 @@ ON Orders (Poster, Type, Time, Item, Rate);
 CREATE INDEX if not exists index_inbox
 ON Inbox (Recipient);
 
+CREATE VIEW if not exists distinct_items AS
+SELECT DISTINCT Item FROM Orders;
+
 END TRANSACTION;
 ]=]
 
@@ -649,6 +652,11 @@ function ex_methods.buy(self, p_name, ex_name, item_name, amount, rate)
 	local db = self.db
 	
 	local bal = self:get_balance(p_name)
+
+	if not bal then
+		return false, "Nonexistent account."
+	end
+	
 	if bal < amount * rate then
 		return false, "Not enough money."
 	end
