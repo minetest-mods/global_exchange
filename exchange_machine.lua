@@ -10,7 +10,7 @@ local function mk_summary_fs()
 	table.insert(res, "label[0,0;Updated Periodically]")
 	table.insert(res, "tablecolumns[text;text;text;text;text;text]")
 	table.insert(res, "table[0,1;8,6;summary_table;")
-	table.insert(res, "Item,Description,Buy Vol,Buy Max,Sell Vol,Sell Max")
+	table.insert(res, "Item,Description,Buy Vol,Buy Max,Sell Vol,Sell Min")
 
 	local all_items = minetest.registered_items
 	for i, row in ipairs(summary) do
