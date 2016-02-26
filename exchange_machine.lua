@@ -1,6 +1,55 @@
 
 local exchange = ...
 local search_cooldown = 2
+local summary_interval = 600
+
+local function mk_summary_fs()
+	local summary = exchange:market_summary()
+	local res = {}
+	table.insert(res, "size[8,8]")
+	table.insert(res, "label[0,0;Updated Periodically]")
+	table.insert(res, "tablecolumns[text;text;text;text;text;text]")
+	table.insert(res, "table[0,1;8,6;summary_table;")
+	table.insert(res, "Item,Description,Buy Vol,Buy Max,Sell Vol,Sell Max")
+
+	local all_items = minetest.registered_items
+	for i, row in ipairs(summary) do
+		table.insert(res, "," .. row.item_name)
+		local def = all_items[row.item_name]
+		if def then
+			table.insert(res, "," .. def.description)
+		else
+			table.insert(res, "," .. "Unknown Item")
+		end
+		table.insert(res, "," .. (row.buy_volume or 0))
+		table.insert(res, "," .. (row.buy_max or "N/A"))
+		table.insert(res, "," .. (row.sell_volume or 0))
+		table.insert(res, "," .. (row.sell_min or "N/A"))
+	end
+
+	table.insert(res, "]")
+	table.insert(res, "button[3,7;2,1;back;Back]")
+	
+	return table.concat(res)
+end
+local summary_fs = ""
+minetest.after(0, function()
+	summary_fs = mk_summary_fs()
+end)
+
+
+local elapsed = 0
+minetest.register_globalstep(function(dtime)
+	elapsed = elapsed + dtime
+	if elapsed >= summary_interval then
+		summary_fs = mk_summary_fs()
+	end
+end)
+
+local summary_form = "global_exchange:summary"
+local function show_summary(p_name)
+	minetest.show_formspec(p_name, summary_form, summary_fs)
+end
 
 local main_state = {}
 -- ^ A per-player state for the main form. It contains these values:
@@ -101,6 +150,7 @@ local function mk_main_fs(p_name, new_item, err_str, success)
 		fs = fs .. "label[0.2,0.5;Use an ATM to make your account.]"
 	end
 
+	fs = fs .. "button[4,0;2,1;summary;Market Summary]"
 	fs = fs .. "button[6,0;2,1;your_orders;Your Orders]"
 	fs = fs .. "field[0.2,1.5;3,1;item;Item: ;" .. item_def .. "]"
 	fs = fs .. "field[3.2,1.5;3,1;amount;Amount: ;" .. amount_def .. "]"
@@ -396,6 +446,10 @@ local function handle_main(player, formname, fields)
 		show_main(p_name)
 	end
 
+	if fields["summary"] then
+		show_summary(p_name)
+	end
+
 	if fields["your_orders"] then
 		if not own_state[p_name] then
 			own_state[p_name] = {}
@@ -491,9 +545,23 @@ local function handle_own_orders(player, formname, fields)
 end
 
 
+local function handle_summary(player, formname, fields)
+	if formname ~= summary_form then return end
+
+	local p_name = player:get_player_name()
+
+	if fields["back"] then
+		show_main(p_name)
+	end
+
+	return true
+end
+
+
 minetest.register_on_player_receive_fields(handle_main)
 minetest.register_on_player_receive_fields(handle_select)
 minetest.register_on_player_receive_fields(handle_own_orders)
+minetest.register_on_player_receive_fields(handle_summary)
 
 
 minetest.register_node("global_exchange:exchange", {

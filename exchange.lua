@@ -53,6 +53,32 @@ ON Inbox (Recipient);
 CREATE VIEW if not exists distinct_items AS
 SELECT DISTINCT Item FROM Orders;
 
+CREATE VIEW if not exists market_summary AS
+SELECT
+  distinct_items.Item,
+  (
+    SELECT sum(Orders.Amount) FROM Orders
+    WHERE Orders.Item = distinct_items.Item
+    AND Orders.Type = "buy"
+  ),
+  (
+    SELECT max(Orders.Rate) FROM Orders
+    WHERE Orders.Item = distinct_items.Item
+    AND Orders.Type = "buy"
+  ),
+  (
+    SELECT sum(Orders.Amount) FROM Orders
+    WHERE Orders.Item = distinct_items.Item
+    AND Orders.Type = "sell"
+  ),
+  (
+    SELECT min(Orders.Rate) FROM Orders
+    WHERE Orders.Item = distinct_items.Item
+    AND Orders.Type = "sell"
+  )
+FROM distinct_items;
+    
+
 END TRANSACTION;
 ]=]
 
@@ -192,6 +218,10 @@ DELETE FROM Inbox
 WHERE Id = :id;
 ]=]
 
+local summary_query = [=[
+SELECT * FROM market_summary;
+]=]
+
 
 local ex_methods = {}
 local ex_meta = { __index = ex_methods }
@@ -252,6 +282,7 @@ function exports.open_exchange(path)
 		get_inbox_stmt = assert(db:prepare(get_inbox_query)),
 		red_inbox_stmt = assert(db:prepare(red_inbox_query)),
 		del_inbox_stmt = assert(db:prepare(del_inbox_query)),
+		summary_stmt = assert(db:prepare(summary_query)),
 	}
 
 	
@@ -1053,7 +1084,32 @@ function ex_methods.take_inbox(self, id, amount)
 	return true, math.min(amount, available)
 
 end
-	
+
+
+-- Returns a list of tables with fields:
+--   item_name: Name of the item
+--   buy_volume: Number of items sought
+--   buy_max: Maximum buy rate
+--   sell_volume: Number of items for sale
+--   sell_min: Minimum sell rate
+function ex_methods.market_summary(self)
+	local db = self.db
+	local stmt = self.stmts.summary_stmt
+
+	local res = {}
+	for a in stmt:rows() do
+		table.insert(res, {
+			item_name = a[1],
+			buy_volume = a[2],
+			buy_max = a[3],
+			sell_volume = a[4],
+			sell_min = a[5],
+		})
+	end
+	stmt:reset()
+
+	return res
+end
 
 
 function exports.test()
