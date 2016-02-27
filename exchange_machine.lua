@@ -516,7 +516,8 @@ local function handle_own_orders(player, formname, fields)
 			end
 		end
 
-		local succ, err = exchange:cancel_order(p_name, row.Id)
+		local succ, err =
+			exchange:cancel_order(p_name, row.Id, row.Type, row.Item, row.Amount, row.Rate)
 		if succ then
 			table.remove(results, idx)
 			if row.Type == "sell" then
@@ -581,4 +582,14 @@ minetest.register_node("global_exchange:exchange", {
 
 		show_main(p_name)
 	end,
+})
+
+
+minetest.register_craft( {
+	output = "global_exchange:exchange",
+	recipe = {
+		{ "default:steel_ingot", "default:steel_ingot", "default:steel_ingot" },
+		{ "default:mese_crystal", "default:steel_ingot", "default:diamond" },
+		{ "default:steel_ingot", "default:steel_ingot", "default:steel_ingot" },
+	}
 })

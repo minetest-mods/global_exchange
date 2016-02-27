@@ -204,3 +204,13 @@ minetest.register_node("global_exchange:atm", {
 		minetest.show_formspec(p_name, atm_form, main_menu)
 	end,
 })
+
+
+minetest.register_craft( {
+	output = "global_exchange:atm",
+	recipe = {
+		{ "default:stone", "default:stone", "default:stone" },
+		{ "default:stone", "default:gold_ingot", "default:stone" },
+		{ "default:stone", "default:stone", "default:stone" },
+	}
+})

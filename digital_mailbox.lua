@@ -126,8 +126,8 @@ minetest.register_node("global_exchange:mailbox", {
 minetest.register_craft( {
 	output = "global_exchange:mailbox",
 	recipe = {
-		{ "default:steel_ingot", "default:steel_ingot", "default:steel_ingot" },
-		{ "default:steel_ingot", "default:gold_ingot", "default:steel_ingot" },
-		{ "default:steel_ingot", "default:steel_ingot", "default:steel_ingot" },
+		{ "default:stone", "default:gold_ingot", "default:stone" },
+		{ "default:stone", "default:chest", "default:stone" },
+		{ "default:stone", "default:stone", "default:stone" },
 	}
 })
