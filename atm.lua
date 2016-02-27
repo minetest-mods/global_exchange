@@ -5,10 +5,11 @@ local exchange = ...
 local atm_form = "global_exchange:atm_form"
 
 local main_menu =[[
-size[6,1]
+size[6,2]
 button[0,0;2,1;new_account;New Account]
 button[2,0;2,1;info;Account Info]
 button[4,0;2,1;wire;Wire Monies]
+button[1,1;4,1;transaction_log;Transaction Log]
 ]]
 
 
@@ -122,6 +123,25 @@ local function send_fs(p_name, receiver, amt_str)
 end
 
 
+local function log_fs(p_name)
+	local res = { "size[8,8]label[0,0;Transaction Log]button[0,7;2,1;logout;Log Out]",
+		      "tablecolumns[text;text]",
+		      "table[0,1;8,6;log_table;Time,Message",
+	}
+
+	local log = exchange:player_log(p_name)
+	for i, entry in ipairs(log) do
+		table.insert(res, ",")
+		table.insert(res, tostring(entry.Time))
+		table.insert(res, ",")
+		table.insert(res, entry.Message)
+	end
+	table.insert(res, "]")
+
+	return table.concat(res)
+end
+
+
 local trans_ids = {}
 
 
@@ -158,6 +178,10 @@ local function handle_fields(player, formname, fields)
 	if fields["send"] then
 		minetest.show_formspec(p_name, atm_form,
 				       send_fs(p_name, fields.recipient, fields.amount))
+	end
+
+	if fields["transaction_log"] then
+		minetest.show_formspec(p_name, atm_form, log_fs(p_name))
 	end
 
 	return true

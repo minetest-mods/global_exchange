@@ -1134,6 +1134,22 @@ function ex_methods.market_summary(self)
 end
 
 
+-- Returns a list of log entries, sorted by time.
+function ex_methods.player_log(self, p_name)
+	local stmt = self.stmts.transaction_log_stmt
+	stmt:bind_names({ p_name = p_name })
+	
+	local res = {}
+
+	for row in stmt:nrows() do
+		table.insert(res, row)
+	end
+
+	stmt:reset()
+
+	return res
+end
+
 function exports.test()
 	local ex = exports.open_exchange("test.db")
 
