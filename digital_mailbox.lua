@@ -107,9 +107,9 @@ end)
 
 minetest.register_node("global_exchange:mailbox", {
 	description = "Digital Mailbox",
-	tiles = {"global_exchange_atm_top.png",
-		 "global_exchange_atm_top.png",
-		 "global_exchange_mailbox_side.png",
+	tiles = {"global_exchange_box.png",
+		"global_exchange_box.png",
+		"global_exchange_box.png^global_exchange_mailbox_side.png",
 	},
 	groups = {cracky=2},
 	on_rightclick = function(pos, node, clicker)

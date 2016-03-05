@@ -162,7 +162,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 	if fields.send then
 		minetest.show_formspec(p_name, atm_form,
-				       send_fs(p_name, fields.recipient, fields.amount))
+			send_fs(p_name, fields.recipient, fields.amount))
 	end
 
 	if fields.transaction_log then
@@ -175,9 +175,9 @@ end)
 
 minetest.register_node("global_exchange:atm", {
 	description = "ATM",
-	tiles = {"global_exchange_atm_top.png",
-		 "global_exchange_atm_top.png",
-		 "global_exchange_atm_side.png",
+	tiles = {"global_exchange_box.png",
+		"global_exchange_box.png",
+		"global_exchange_box.png^global_exchange_atm_side.png",
 	},
 	groups = {cracky=2},
 	on_rightclick = function(pos, _, clicker)
