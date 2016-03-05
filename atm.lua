@@ -6,6 +6,7 @@ local atm_form = "global_exchange:atm_form"
 
 local main_menu =[[
 size[6,2]
+button[0,0;2,1;cash;Cash In/Out]
 button[2,0;2,1;info;Account Info]
 button[4,0;2,1;wire;Wire Monies]
 button[1,1;4,1;transaction_log;Transaction Log]
@@ -37,6 +38,33 @@ local function unique()
 	return ret
 end
 
+function cash_fs(p_name)
+  local balance = exchange:get_balance(p_name)
+  local formspec =
+    'size[8,9]'..
+    'label[0,0;' .. p_name .. '\'s account]' ..
+    'label[0,1;Balance: ' .. balance .. ']' ..
+    --money
+    'list[detached:global_exchange;money;0,2;3,1;]'..
+    --player inventory
+    'list[current_player;main;0,5;8,4;]'
+--print(formspec)
+  return formspec
+end
+
+function bills2balance(stack, p_name)
+  local bal = exchange:get_balance(p_name)
+  local name = stack:get_name()
+  local count = stack:get_count()
+  if name == 'currency:minegeld' then
+    bal = bal + count
+  elseif name == 'currency:minegeld_5' then
+    bal = bal + count * 5
+  elseif name == 'currency:minegeld_10' then
+    bal = bal + count * 10
+  end
+  return bal
+end
 
 local function info_fs(p_name)
 	local balance = exchange:get_balance(p_name)
@@ -131,6 +159,35 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 	if fields.logout then
 		minetest.show_formspec(p_name, atm_form, main_menu)
+	end
+
+	if fields.cash then
+		minetest.show_formspec(p_name, atm_form, cash_fs(p_name))
+		local balance = exchange:get_balance(p_name)
+		local inv = minetest.get_inventory({type="detached", name="global_exchange"})
+		inv:set_size('money', 3)
+		local stacks = inv:get_list('money')
+		local tens = math.floor(balance/10)
+		if tens > 0 then
+			inv:set_stack('money', 1, 'currency:minegeld_10 ' .. tens)
+			balance = balance - tens * 10
+		else
+			inv:set_stack('money', 1, '')
+		end
+		local fives = math.floor(balance/5)
+		if fives > 0 then
+			inv:set_stack('money', 2, 'currency:minegeld_5 ' .. fives)
+			balance = balance - fives * 5
+		else
+			inv:set_stack('money', 2, '')
+		end
+		local ones = math.floor(balance)
+		if ones > 0 then
+			inv:set_stack('money', 3, 'currency:minegeld ' .. ones)
+			balance = balance - ones
+		else
+			inv:set_stack('money', 3, '')
+		end
 	end
 
 	if fields.info then
