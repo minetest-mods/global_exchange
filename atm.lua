@@ -14,8 +14,7 @@ button[1,1;4,1;transaction_log;Transaction Log]
 
 
 local function logout(x,y)
-	return "button[" .. x .. "," .. y ..
-		";2,1;logout;Log Out]"
+	return "button[" .. x .. "," .. y .. ";2,1;logout;Log Out]"
 end
 
 
@@ -41,58 +40,48 @@ end
 
 
 local function new_account_fs(p_name)
-	local fs = "size[4,3]"
-
 	local act_suc, err = exchange:new_account(p_name)
 
+	local fs
 	if not act_suc then
-		fs = fs .. label(0.5,0.5, "Error: " .. err)
+		fs = label(0.5,0.5, "Error: " .. err)
 	else
-		fs = fs .. label(0.5,0.5, "Congratulations on \nyour new account.")
+		fs = label(0.5,0.5, "Congratulations on \nyour new account.")
 	end
 
-	fs = fs .. logout(0.5,2)
-
-	return fs
+	return "size[4,3]" .. fs .. logout(0.5,2)
 end
 
 
 local function info_fs(p_name)
 	local balance = exchange:get_balance(p_name)
 
-	local fs = "size[4,3]"
-
+	local fs
 	if not balance then
-		fs = fs .. label(0.5,0.5, "You don't have an account.")
+		fs = label(0.5,0.5, "You don't have an account.")
 	else
-		fs = fs .. label(0.5,0.5, "Balance: " .. balance)
+		fs = label(0.5,0.5, "Balance: " .. balance)
 	end
 
-	fs = fs .. logout(0.5,2)
-
-	return fs
+	return "size[4,3]" .. fs .. logout(0.5,2)
 end
 
 
 local function wire_fs(p_name)
 	local balance = exchange:get_balance(p_name)
 
-	local fs = "size[4,5]"
-	fs = fs .. logout(0,4)
+	local fs = "size[4,5]" .. logout(0,4)
 
 	if not balance then
-		fs = fs .. label(0.5,0.5, "You don't have an account.")
-		return fs
+		return fs .. label(0.5,0.5, "You don't have an account.")
 	end
 
 	-- To prevent duplicates
-	fs = fs .. field(-100, -100, 0,0, "trans_id", "", unique())
-	fs = fs .. label(0.5,0.5, "Balance: " .. balance)
-	fs = fs .. field(0.5,1.5, 2,1, "recipient", "Send to:", "")
-	fs = fs .. field(0.5,2.5, 2,1, "amount", "Amount", "")
-	fs = fs .. "button[2,4;2,1;send;Send]"
-
-	return fs
+	return fs .. field(-100, -100, 0,0, "trans_id", "", unique()) ..
+		label(0.5,0.5, "Balance: " .. balance) ..
+		field(0.5,1.5, 2,1, "recipient", "Send to:", "") ..
+		field(0.5,2.5, 2,1, "amount", "Amount", "") ..
+		"button[2,4;2,1;send;Send]"
 end
 
 
@@ -101,42 +90,39 @@ local function send_fs(p_name, receiver, amt_str)
 
 	local amt = tonumber(amt_str)
 
-	if not amt or amt <= 0 then
-		fs = fs .. label(0.5,0.5, "Invalid transfer amount.")
-		fs = fs .. "button[0.5,2;2,1;wire;Back]"
-		
-		return fs
+	if not amt
+	or amt <= 0 then
+		return fs .. label(0.5,0.5, "Invalid transfer amount.") ..
+			"button[0.5,2;2,1;wire;Back]"
 	end
-	
+
 	local succ, err = exchange:transfer_credits(p_name, receiver, amt)
 
 	if not succ then
-		fs = fs .. label(0.5,0.5, "Error: " .. err)
-		fs = fs .. "button[0.5,2;2,1;wire;Back]"
-	else
-		fs = fs.. label(0.5,0.5, "Successfully sent "
-					.. amt .. " credits to " .. receiver)
-		fs = fs .. "button[0.5,2;2,1;wire;Back]"
+		return fs .. label(0.5,0.5, "Error: " .. err) ..
+			"button[0.5,2;2,1;wire;Back]"
 	end
-
-	return fs
+	return fs.. label(0.5,0.5, "Successfully sent " ..
+		amt .. " credits to " .. receiver) ..
+		"button[0.5,2;2,1;wire;Back]"
 end
 
 
 local function log_fs(p_name)
-	local res = { "size[8,8]label[0,0;Transaction Log]button[0,7;2,1;logout;Log Out]",
-		      "tablecolumns[text;text]",
-		      "table[0,1;8,6;log_table;Time,Message",
+	local res = {
+		"size[8,8]label[0,0;Transaction Log]button[0,7;2,1;logout;Log Out]",
+		"tablecolumns[text;text]",
+		"table[0,1;8,6;log_table;Time,Message",
 	}
 
-	local log = exchange:player_log(p_name)
-	for i, entry in ipairs(log) do
-		table.insert(res, ",")
-		table.insert(res, tostring(entry.Time))
-		table.insert(res, ",")
-		table.insert(res, entry.Message)
+	for i, entry in ipairs(exchange:player_log(p_name)) do
+		i = i*4
+		res[i] = ","
+		res[i+1] = tostring(entry.Time)
+		res[i+2] = ","
+		res[i+3] = entry.Message
 	end
-	table.insert(res, "]")
+	res[#res+1] ="]"
 
 	return table.concat(res)
 end
@@ -145,9 +131,9 @@ end
 local trans_ids = {}
 
 
-local function handle_fields(player, formname, fields)
+minetest.register_on_player_receive_fields(function(player, formname, fields)
 	if formname ~= atm_form then return end
-	if fields["quit"] then return true end
+	if fields.quit then return true end
 
 	local p_name = player:get_player_name()
 
@@ -159,36 +145,33 @@ local function handle_fields(player, formname, fields)
 
 	trans_ids[p_name] = this_id
 
-	if fields["logout"] then
+	if fields.logout then
 		minetest.show_formspec(p_name, atm_form, main_menu)
 	end
 
-	if fields["new_account"] then
+	if fields.new_account then
 		minetest.show_formspec(p_name, atm_form, new_account_fs(p_name))
 	end
 
-	if fields["info"] then
+	if fields.info then
 		minetest.show_formspec(p_name, atm_form, info_fs(p_name))
 	end
 
-	if fields["wire"] then
+	if fields.wire then
 		minetest.show_formspec(p_name, atm_form, wire_fs(p_name))
 	end
 
-	if fields["send"] then
+	if fields.send then
 		minetest.show_formspec(p_name, atm_form,
 				       send_fs(p_name, fields.recipient, fields.amount))
 	end
 
-	if fields["transaction_log"] then
+	if fields.transaction_log then
 		minetest.show_formspec(p_name, atm_form, log_fs(p_name))
 	end
 
 	return true
-end
-
-
-minetest.register_on_player_receive_fields(handle_fields)
+end)
 
 
 minetest.register_node("global_exchange:atm", {
@@ -198,10 +181,8 @@ minetest.register_node("global_exchange:atm", {
 		 "global_exchange_atm_side.png",
 	},
 	groups = {cracky=2},
-	on_rightclick = function(pos, node, clicker)
-		local p_name = clicker:get_player_name()
-
-		minetest.show_formspec(p_name, atm_form, main_menu)
+	on_rightclick = function(pos, _, clicker)
+		minetest.show_formspec(clicker:get_player_name(), atm_form, main_menu)
 	end,
 })
 
