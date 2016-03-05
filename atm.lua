@@ -13,8 +13,8 @@ button[1,1;4,1;transaction_log;Transaction Log]
 ]]
 
 
-local function logout(x,y)
-	return "button[" .. x .. "," .. y .. ";2,1;logout;Log Out]"
+local function back(x,y)
+	return "button[" .. x .. "," .. y .. ";2,1;main;Back]"
 end
 
 
@@ -47,7 +47,9 @@ function cash_fs(p_name)
     --money
     'list[detached:global_exchange;money;0,2;3,1;]'..
     --player inventory
-    'list[current_player;main;0,5;8,4;]'
+    'list[current_player;main;0,4;8,4;]'..
+    --back button
+    back(0,8)
 --print(formspec)
   return formspec
 end
@@ -76,14 +78,14 @@ local function info_fs(p_name)
 		fs = label(0.5,0.5, "Balance: " .. balance)
 	end
 
-	return "size[4,3]" .. fs .. logout(0.5,2)
+	return "size[4,3]" .. fs .. back(0.5,2)
 end
 
 
 local function wire_fs(p_name)
 	local balance = exchange:get_balance(p_name)
 
-	local fs = "size[4,5]" .. logout(0,4)
+	local fs = "size[4,5]" .. back(0,4)
 
 	if not balance then
 		return fs .. label(0.5,0.5, "You don't have an account.")
@@ -122,7 +124,7 @@ end
 
 local function log_fs(p_name)
 	local res = {
-		"size[8,8]label[0,0;Transaction Log]button[0,7;2,1;logout;Log Out]",
+		"size[8,8]label[0,0;Transaction Log]button[0,7;2,1;main;Back]",
 		"tablecolumns[text;text]",
 		"table[0,1;8,6;log_table;Time,Message",
 	}
@@ -157,7 +159,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 	trans_ids[p_name] = this_id
 
-	if fields.logout then
+	if fields.main then
 		minetest.show_formspec(p_name, atm_form, main_menu)
 	end
 
