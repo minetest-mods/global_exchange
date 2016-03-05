@@ -2,7 +2,7 @@
 
 This mod provides a server-wide trading exchange for items. It is available
 under GNU GPL version 3 or any later version. lsqlite3 is required by this mod,
-and can be installed through luarocks.
+and can be installed through luarocks. ($ sudo luarocks install lsqlite3)
 
 Nodes
 =====
