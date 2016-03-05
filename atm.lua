@@ -4,14 +4,16 @@ local exchange = ...
 
 local atm_form = "global_exchange:atm_form"
 
-local main_menu =[[
-size[6,2]
-button[0,0;2,1;cash;Cash In/Out]
-button[2,0;2,1;info;Account Info]
-button[4,0;2,1;wire;Wire Monies]
-button[1,1;4,1;transaction_log;Transaction Log]
-]]
-
+local function main_menu(p_name)
+	local balance = exchange:get_balance(p_name)
+	local formspec = 'size[6,2]' ..
+	'label[0,0;' .. p_name .. '\'s account]' ..
+	'label[0,0.5;Balance: ' .. balance .. ']' ..
+	'button[0,1;2,1;cash;Cash In/Out]' ..
+	'button[2,1;2,1;wire;Transfer]' ..
+	'button[4,1;2,1;transaction_log;History]'
+	return formspec
+end
 
 local function back(x,y)
 	return "button[" .. x .. "," .. y .. ";2,1;main;Back]"
@@ -68,28 +70,10 @@ function bills2balance(stack, p_name)
   return bal
 end
 
-local function info_fs(p_name)
-	local balance = exchange:get_balance(p_name)
-
-	local fs
-	if not balance then
-		fs = label(0.5,0.5, "You don't have an account.")
-	else
-		fs = label(0.5,0.5, "Balance: " .. balance)
-	end
-
-	return "size[4,3]" .. fs .. back(0.5,2)
-end
-
-
 local function wire_fs(p_name)
 	local balance = exchange:get_balance(p_name)
 
 	local fs = "size[4,5]" .. back(0,4)
-
-	if not balance then
-		return fs .. label(0.5,0.5, "You don't have an account.")
-	end
 
 	-- To prevent duplicates
 	return fs .. field(-100, -100, 0,0, "trans_id", "", unique()) ..
@@ -160,7 +144,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	trans_ids[p_name] = this_id
 
 	if fields.main then
-		minetest.show_formspec(p_name, atm_form, main_menu)
+		minetest.show_formspec(p_name, atm_form, main_menu(p_name))
 	end
 
 	if fields.cash then
@@ -192,10 +176,6 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		end
 	end
 
-	if fields.info then
-		minetest.show_formspec(p_name, atm_form, info_fs(p_name))
-	end
-
 	if fields.wire then
 		minetest.show_formspec(p_name, atm_form, wire_fs(p_name))
 	end
@@ -221,7 +201,7 @@ minetest.register_node("global_exchange:atm", {
 	},
 	groups = {cracky=2},
 	on_rightclick = function(pos, _, clicker)
-		minetest.show_formspec(clicker:get_player_name(), atm_form, main_menu)
+		minetest.show_formspec(clicker:get_player_name(), atm_form, main_menu(clicker:get_player_name()))
 	end,
 })
 
