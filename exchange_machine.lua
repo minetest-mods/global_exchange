@@ -597,11 +597,38 @@ end)
 
 minetest.register_node("global_exchange:exchange", {
 	description = "Exchange",
-	tiles = {"global_exchange_atm_top.png",
-		 "global_exchange_atm_top.png",
-		 "global_exchange_exchange_side.png",
+	drawtype = "nodebox",
+	tiles = {
+		"global_exchange_terminal_top.png",
+		"global_exchange_terminal_bottom.png",
+		"global_exchange_terminal_right.png",
+		"global_exchange_terminal_right.png^[transform4",
+		"global_exchange_terminal_back.png",
+		"global_exchange_terminal_front.png",
 	},
+	paramtype = "light",
+	paramtype2 = "facedir",
 	groups = {cracky=2},
+	stack_max = 1,
+	light_source = 3,
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-8/16, -4/16, 3/16, 0.5, 0.5, 5/16},--screens
+			{-1/16, -7/16, 5/16, 1/16, 5/16, 7/16},--screen leg
+			{-3/16, -8/16, 4/16, 3/16, -7/16, 8/16},--leg platform
+			{-7/16, -8/16, -8/16, 2/16, -6/16, -3/16},--keyboard
+			{3/16, -8/16, -3/16, 7/16, -7/16, 3/16},--phone low
+			{4/16, -7/16, -1/16, 6/16, -6/16, 3/16},--phone hi
+			{2/16, -7/16, 0, 8/16, -5/16, 2/16},--phone speaker
+		}
+	},
+--[[
+	selection_box = {
+		type = "fixed",
+		fixed = {-0.5, -0.5, -0.5, 0.5, 0.5, 0.5},
+	},
+]]
 	on_rightclick = function(_, _, clicker)
 		local p_name = clicker:get_player_name()
 		local state = main_state[p_name]
