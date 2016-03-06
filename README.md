@@ -6,8 +6,8 @@ and can be installed through luarocks.
 
 Nodes
 =====
- - ATM (global_exchange:atm) - Used by players to make an account, to view their
- balance, and to send money to other players.
+ - ATM (global_exchange:atm) - Used by players to withdraw and deposit minegeld
+bills, transfer money to other players, and to view the history of transactions.
  - Exchange (global_exchange:exchange) - Used by players to search and post
  orders, and to view a summary of current market prices.
  - Digital Mailbox (global_exchange:mailbox) - Used by players to claim items

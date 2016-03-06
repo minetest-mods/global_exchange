@@ -195,8 +195,8 @@ end)
 
 minetest.register_node("global_exchange:atm_bottom", {
 	description = "ATM",
-	--inventory_image = "",
-	--wield_image = def.wield_image,
+	inventory_image = "global_exchange_atm_icon.png",
+	wield_image = "global_exchange_atm_hi_front.png",
 	drawtype = "nodebox",
 	tiles = {
 		"global_exchange_atm_lo_top.png",
