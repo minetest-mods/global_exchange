@@ -458,6 +458,12 @@ function ex_methods.change_balance(self, p_name, delta)
 		return false, p_name .. " does not have enough money."
 	end
 
+	if delta > 0 then
+		self:log("Deposited " .. delta .. " credits", p_name)
+	else --assume delta is never 0
+		self:log("Withdrew " .. -delta .. " credits", p_name)
+	end
+
 	return self:set_balance(p_name, bal + delta)
 end
 

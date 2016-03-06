@@ -116,7 +116,7 @@ local function log_fs(p_name)
 	for i, entry in ipairs(exchange:player_log(p_name)) do
 		i = i*4
 		res[i] = ","
-		res[i+1] = tostring(entry.Time)
+		res[i+1] = os.date("%y-%m-%d %H:%M:%S", entry.Time)
 		res[i+2] = ","
 		res[i+3] = entry.Message
 	end

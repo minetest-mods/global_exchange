@@ -201,8 +201,9 @@ minetest.after(0, function()
   on_put = function(inv, listname, index, stack, player)
     local p_name = player:get_player_name()
     if listname == 'money' and minetest.get_item_group(stack:get_name(), 'minegeld') then
+      local old_balance = exchange:get_balance(p_name)
       local balance = bills2balance(stack, p_name)
-      exchange:set_balance(p_name, balance)
+      exchange:change_balance(p_name, balance - old_balance)
       local stacks = inv:get_list('money')
       local tens = math.floor(balance/10)
       if tens > 0 then
