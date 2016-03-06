@@ -90,8 +90,7 @@ local function send_fs(p_name, receiver, amt_str)
 
 	local amt = tonumber(amt_str)
 
-	if not amt
-	or amt <= 0 then
+	if not amt or amt <= 0 then
 		return fs .. label(0.5,0.5, "Invalid transfer amount.") ..
 			"button[0.5,2;2,1;wire;Back]"
 	end

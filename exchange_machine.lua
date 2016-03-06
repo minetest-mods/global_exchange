@@ -188,7 +188,7 @@ minetest.after(0, function()
 		allow_take = function()
 			return 0
 		end,
-		on_move = function(inv, _,_,_,_,_, player)
+		on_move = function(inv, _, _, _, _, _, player)
 			local p_name = player:get_player_name()
 			local p_list = "p_" .. p_name
 
@@ -539,7 +539,7 @@ minetest.register_node("global_exchange:exchange", {
 		 "global_exchange_exchange_side.png",
 	},
 	groups = {cracky=2},
-	on_rightclick = function(_,_, clicker)
+	on_rightclick = function(_, _, clicker)
 		local p_name = clicker:get_player_name()
 		local state = main_state[p_name]
 		if state then
