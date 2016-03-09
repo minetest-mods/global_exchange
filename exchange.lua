@@ -819,7 +819,7 @@ function ex_methods.buy(self, p_name, ex_name, item_name, amount, rate)
 				return false, log2_err
 			end
 
-			break
+			remaining = 0
 		end
 
 		if remaining == 0 then break end
@@ -983,8 +983,7 @@ function ex_methods.sell(self, p_name, ex_name, item_name, amount, rate)
 				return false, log2_err
 			end
 
-			break
-			--revenue = revenue + remaining * row.Rate
+			remaining = 0
 		end
 
 		if remaining == 0 then break end

@@ -161,8 +161,8 @@ local function mk_main_fs(p_name, new_item, err_str, success)
 end
 
 
-local function show_main(p_name, ...)
-	minetest.show_formspec(p_name, main_form, mk_main_fs(p_name, ...))
+local function show_main(p_name, new_item, err_str, success)
+	minetest.show_formspec(p_name, main_form, mk_main_fs(p_name, new_item, err_str, success))
 end
 
 
@@ -220,6 +220,7 @@ end)
 
 
 minetest.register_on_joinplayer(function(player)
+	-- the inventory list name is "p_"..player_name
 	minetest.get_inventory({
 		type="detached",
 		name="global_exchange"
