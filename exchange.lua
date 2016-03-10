@@ -1015,7 +1015,7 @@ end
 
 
 -- On success, returns true and a list of inbox entries.
--- On failure, an error message.
+-- TODO: On failure, return false and an error message.
 function ex_methods.view_inbox(self, p_name)
 	local stmt = self.stmts.view_inbox_stmt
 
