@@ -316,6 +316,10 @@ local function post_order(player, ex_name, order_type, item_name, amount_str, ra
 		return false, "Invalid rate."
 	end
 
+	if amount > 1000 then
+		return false, "Max amount is 1000"
+	end
+
 	local p_inv = player:get_inventory()
 	local stack = ItemStack(item_name)
 	stack:set_count(amount)
