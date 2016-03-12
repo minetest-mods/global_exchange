@@ -77,7 +77,7 @@ SELECT
     AND Orders.Type = "sell"
   )
 FROM distinct_items;
-    
+
 
 END TRANSACTION;
 ]=]
@@ -239,7 +239,7 @@ end
 
 
 local function is_integer(num)
-	return math.floor(num) == num
+	return num%1 == 0
 end
 
 
@@ -248,7 +248,7 @@ local function exec_stmt(db, stmt, names)
 
 	local res = stmt:step()
 	stmt:reset()
-	
+
 	if res == sqlite3.BUSY then
 		return false, "Database Busy."
 	elseif res ~= sqlite3.DONE then
@@ -292,7 +292,7 @@ function exports.open_exchange(path)
 		transaction_log_stmt = assert(db:prepare(transaction_log_query)),
 	}
 
-	
+
 	local ret = { db = db,
 		      stmts = stmts,
 	}
@@ -332,7 +332,7 @@ function ex_methods.log(self, message, recipient)
 		return true
 	end
 end
-		
+
 
 -- Returns success boolean and error.
 function ex_methods.new_account(self, p_name, amt)
@@ -346,7 +346,7 @@ function ex_methods.new_account(self, p_name, amt)
 	end
 
 	db:exec("BEGIN TRANSACTION;")
-	
+
 	local stmt = self.stmts.new_act_stmt
 
 	stmt:bind_names({
@@ -385,7 +385,7 @@ function ex_methods.new_account(self, p_name, amt)
 	end
 
 	db:exec("COMMIT;")
-	
+
 	return true
 end
 
@@ -394,7 +394,7 @@ end
 function ex_methods.get_balance(self, p_name)
 	local db = self.db
 	local stmt = self.stmts.get_balance_stmt
-	
+
 	stmt:bind_values(p_name)
 	local res = stmt:step()
 
@@ -534,11 +534,6 @@ end
 
 -- Returns a list of orders, sorted by price.
 function ex_methods.search_orders(self, ex_name, order_type, item_name)
-	local params = { ex_name = ex_name,
-			 order_type = order_type,
-			 item_name = item_name,
-	}
-
 	local stmt
 	if order_type == "buy" then
 		stmt = self.stmts.search_asc_stmt
@@ -546,12 +541,17 @@ function ex_methods.search_orders(self, ex_name, order_type, item_name)
 		stmt = self.stmts.search_desc_stmt
 	end
 
-	stmt:bind_names(params)
+	stmt:bind_names({
+		ex_name = ex_name,
+		order_type = order_type,
+		item_name = item_name,
+	})
 
-	local orders = {}
+	local orders,n = {},1
 
 	for tab in stmt:nrows() do
-		table.insert(orders, tab)
+		orders[n] = tab
+		n = n+1
 	end
 
 	stmt:reset()
@@ -561,17 +561,15 @@ end
 
 -- Same as above, except not sorted in any particular order.
 function ex_methods.search_player_orders(self, p_name)
-	local params = { p_name = p_name,
-	}
-
 	local stmt = self.stmts.search_own_stmt
 
-	stmt:bind_names(params)
+	stmt:bind_names({p_name = p_name})
 
-	local orders = {}
+	local orders,n = {},1
 
 	for tab in stmt:nrows() do
-		table.insert(orders, tab)
+		orders[n] = tab
+		n = n+1
 	end
 
 	stmt:reset()
@@ -692,31 +690,31 @@ end
 -- remaining desired amount. Returns success. If succeeded, also returns amount
 -- bought. If failed, returns an error message
 function ex_methods.buy(self, p_name, ex_name, item_name, amount, rate)
-	if math.floor(amount) ~= amount then
+	if not is_integer(amount) then
 		return false, "Noninteger quantity"
 	elseif amount <= 0 then
 		return false, "Nonpositive quantity"
-	elseif math.floor(rate) ~= rate then
+	elseif not is_integer(rate) then
 		return false, "Noninteger rate"
 	elseif rate <= 0 then
 		return false, "Nonpositive rate"
 	end
 
 	local db = self.db
-	
+
 	local bal = self:get_balance(p_name)
 
 	if not bal then
 		return false, "Nonexistent account."
 	end
-	
+
 	if bal < amount * rate then
 		return false, "Not enough money."
 	end
-	
+
 
 	db:exec("BEGIN TRANSACTION");
-	
+
 	local remaining = amount
 
 	local del_stmt = self.stmts.del_order_stmt
@@ -748,7 +746,7 @@ function ex_methods.buy(self, p_name, ex_name, item_name, amount, rate)
 			end
 			del_stmt:reset()
 
-			local ch_succ, ch_err = 
+			local ch_succ, ch_err =
 				self:change_balance(poster, rate * row_amount)
 			if not ch_succ then
 				search_stmt:reset()
@@ -756,7 +754,7 @@ function ex_methods.buy(self, p_name, ex_name, item_name, amount, rate)
 				return false, ch_err
 			end
 
-			local log_succ, log_err = 
+			local log_succ, log_err =
 				self:log(p_name .. " bought " .. row_amount .. " "
 						 .. item_name .. " from you. (+"
 						 .. rate * row_amount .. ")", poster)
@@ -793,7 +791,7 @@ function ex_methods.buy(self, p_name, ex_name, item_name, amount, rate)
 			end
 			red_stmt:reset()
 
-			local ch_succ, ch_err = 
+			local ch_succ, ch_err =
 				self:change_balance(poster, rate * remaining)
 			if not ch_succ then
 				search_stmt:reset()
@@ -801,7 +799,7 @@ function ex_methods.buy(self, p_name, ex_name, item_name, amount, rate)
 				return false, ch_err
 			end
 
-			local log_succ, log_err = 
+			local log_succ, log_err =
 				self:log(p_name .. " bought " .. remaining .. " "
 						 .. item_name .. " from you. (+"
 						 .. rate * remaining .. ")", poster)
@@ -867,20 +865,20 @@ end
 -- Tries to sell to orders at the provided rate, and posts an offer with any
 -- remaining desired amount. Returns success. If failed, returns an error message.
 function ex_methods.sell(self, p_name, ex_name, item_name, amount, rate)
-	if math.floor(amount) ~= amount then
+	if not is_integer(amount) then
 		return false, "Noninteger quantity"
 	elseif amount <= 0 then
 		return false, "Nonpositive quantity"
-	elseif math.floor(rate) ~= rate then
+	elseif not is_integer(rate) then
 		return false, "Noninteger rate"
 	elseif rate <= 0 then
 		return false, "Nonpositive rate"
 	end
 
 	local db = self.db
-	
+
 	db:exec("BEGIN TRANSACTION");
-	
+
 	local remaining = amount
 	local revenue = 0
 
@@ -913,7 +911,7 @@ function ex_methods.sell(self, p_name, ex_name, item_name, amount, rate)
 			end
 			del_stmt:reset()
 
-			local in_succ, in_err = 
+			local in_succ, in_err =
 				self:put_in_inbox(poster, item_name, row_amount)
 			if not in_succ then
 				search_stmt:reset()
@@ -921,7 +919,7 @@ function ex_methods.sell(self, p_name, ex_name, item_name, amount, rate)
 				return false, in_err
 			end
 
-			local log_succ, log_err = 
+			local log_succ, log_err =
 				self:log(p_name .. " sold " .. row_amount .. " "
 						 .. item_name .. " to you." , poster)
 			if not log_succ then
@@ -958,7 +956,7 @@ function ex_methods.sell(self, p_name, ex_name, item_name, amount, rate)
 			end
 			red_stmt:reset()
 
-			local in_succ, in_err = 
+			local in_succ, in_err =
 				self:put_in_inbox(poster, item_name, remaining)
 			if not in_succ then
 				search_stmt:reset()
@@ -966,7 +964,7 @@ function ex_methods.sell(self, p_name, ex_name, item_name, amount, rate)
 				return false, in_err
 			end
 
-			local log_succ, log_err = 
+			local log_succ, log_err =
 				self:log(p_name .. " sold " .. remaining .. " "
 						 .. item_name .. " to you.", poster)
 			if not log_succ then
@@ -986,7 +984,6 @@ function ex_methods.sell(self, p_name, ex_name, item_name, amount, rate)
 			end
 
 			remaining = 0
-			revenue = revenue + remaining * row.Rate
 		end
 
 		if remaining == 0 then break end
@@ -1018,17 +1015,17 @@ end
 
 
 -- On success, returns true and a list of inbox entries.
--- On failure, returns false and an error message.
+-- TODO: On failure, return false and an error message.
 function ex_methods.view_inbox(self, p_name)
-	local db = self.db
 	local stmt = self.stmts.view_inbox_stmt
 
 	stmt:bind_values(p_name)
 
-	local res = {}
+	local res,n = {},1
 
 	for row in stmt:nrows() do
-		table.insert(res, row)
+		res[n] = row
+		n = n+1
 	end
 
 	stmt:reset()
@@ -1049,7 +1046,7 @@ function ex_methods.take_inbox(self, id, amount)
 		id = id,
 		change = amount
 	})
-	
+
 	local res = get_stmt:step()
 
 	if res == sqlite3.BUSY then
@@ -1066,7 +1063,7 @@ function ex_methods.take_inbox(self, id, amount)
 	get_stmt:reset()
 
 	db:exec("BEGIN TRANSACTION;")
-	
+
 	if available > amount then
 		red_stmt:bind_names({
 			id = id,
@@ -1115,18 +1112,18 @@ end
 --   sell_volume: Number of items for sale
 --   sell_min: Minimum sell rate
 function ex_methods.market_summary(self)
-	local db = self.db
 	local stmt = self.stmts.summary_stmt
 
-	local res = {}
+	local res,n = {},1
 	for a in stmt:rows() do
-		table.insert(res, {
+		res[n] = {
 			item_name = a[1],
 			buy_volume = a[2],
 			buy_max = a[3],
 			sell_volume = a[4],
 			sell_min = a[5],
-		})
+		}
+		n = n+1
 	end
 	stmt:reset()
 
@@ -1138,11 +1135,12 @@ end
 function ex_methods.player_log(self, p_name)
 	local stmt = self.stmts.transaction_log_stmt
 	stmt:bind_names({ p_name = p_name })
-	
-	local res = {}
+
+	local res,n = {},1
 
 	for row in stmt:nrows() do
-		table.insert(res, row)
+		res[n] = row
+		n = n+1
 	end
 
 	stmt:reset()
@@ -1162,7 +1160,7 @@ function exports.test()
 		print("Bob: ", ex:get_balance("Bob"))
 	end
 
-	
+
 	-- Initialize balances
 	if alice_bal then
 		ex:set_balance("Alice", 420)
@@ -1178,7 +1176,7 @@ function exports.test()
 
 	print_balances()
 
-	
+
 	-- Transfer a valid amount
 	print("Transfering 1000 credits from Bob to Alice")
 
@@ -1207,7 +1205,7 @@ function exports.test()
 	local succ, err = ex:sell("Bob", "", "default:cobble", 20, 1)
 	print("Success: ", succ, " ", err)
 	print_balances()
-	
+
 	ex:close()
 end
 

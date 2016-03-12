@@ -1,9 +1,7 @@
 
 local modpath = minetest.get_modpath(minetest.get_current_modname()) .. "/"
-local savepath = minetest.get_worldpath() .. "/global_exchange.db"
 
-local income_str = minetest.setting_get("citizens_income")
-local income = income_str and tonumber(income_str) or 10
+local income = tonumber(minetest.setting_get("citizens_income")) or 10
 
 local income_interval = 1200
 
@@ -11,41 +9,40 @@ local income_msg = "You receive your citizen's income (+" .. income .. ")"
 
 local next_payout = os.time() + income_interval
 
-local ex = dofile(modpath .. "exchange.lua")
-local exchange = ex.open_exchange(savepath)
+local exchange = (dofile(modpath .. "exchange.lua")).open_exchange(
+	minetest.get_worldpath() .. "/global_exchange.db"
+)
 
 
 minetest.register_on_shutdown(function()
-		exchange:close()
+	exchange:close()
 end)
 
 
--- Only check once in a while
-local elapsed = 0
+local function check_giving()
+	local now = os.time()
+	if now < next_payout then
+		return
+	end
 
-minetest.register_globalstep(function(dtime)
-		elapsed = elapsed + dtime
-		if elapsed <= 5 then return end
+	next_payout = now + income_interval
 
-		elapsed = 0
+	for _, player in ipairs(minetest.get_connected_players()) do
+		local p_name = player:get_player_name()
 
-		local now = os.time()
-		if now < next_payout then return end
+		local succ = exchange:give_credits(p_name, income,
+			"Citizen's Income (+" .. income .. ")")
 
-		next_payout = now + income_interval
-
-		for i, player in ipairs(minetest.get_connected_players()) do
-			local p_name = player:get_player_name()
-
-			local succ =
-				exchange:give_credits(p_name, income,
-						      "Citizen's Income (+" .. income .. ")")
-
-			if succ then
-				minetest.chat_send_player(p_name, income_msg)
-			end
+		if succ then
+			minetest.chat_send_player(p_name, income_msg)
 		end
-end)
+	end
+
+	minetest.after(5, check_giving)
+end
+
+minetest.after(5, check_giving)
+
 
 
 assert(loadfile(modpath .. "atm.lua"))(exchange)
