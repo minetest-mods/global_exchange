@@ -982,7 +982,8 @@ function ex_methods.sell(self, p_name, ex_name, item_name, amount, rate)
 				db:exec("ROLLBACK;")
 				return false, log2_err
 			end
-
+			
+			revenue = revenue + remaining * row.Rate
 			remaining = 0
 		end
 
