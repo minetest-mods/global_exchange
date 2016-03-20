@@ -204,6 +204,7 @@ minetest.after(0, function()
       local old_balance = exchange:get_balance(p_name)
       local balance = bills2balance(stack, p_name)
       exchange:change_balance(p_name, balance - old_balance)
+      minetest.sound_play("atm_cash", {to_player = p_name})
       local stacks = inv:get_list('money')
       local tens = math.floor(balance/10)
       if tens > 0 then
@@ -250,6 +251,7 @@ minetest.after(0, function()
         delta = count * 10
       end
       exchange:change_balance(p_name, -delta) --let's hope it always returns success
+      minetest.sound_play("atm_cash", {to_player = p_name})
     end
     minetest.show_formspec(p_name, "global_exchange:atm_form", cash_fs(p_name)) --redraw with new balance
   end,
