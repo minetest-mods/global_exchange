@@ -293,7 +293,8 @@ minetest.register_node("global_exchange:atm_top", {
 		fixed = {0, 0, 0, 0, 0, 0},
 	},
 	groups = {
-		atm = 2
+		atm = 2,
+		not_in_creative_inventory = 1
 	},
 })
 
