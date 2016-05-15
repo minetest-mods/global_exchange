@@ -40,7 +40,7 @@ local function unique()
 	return ret
 end
 
-function cash_fs(p_name)
+local function cash_fs(p_name)
 	local balance = exchange:get_balance(p_name)
 	local formspec =
 		'size[8,9]'..
@@ -56,7 +56,7 @@ function cash_fs(p_name)
 	return formspec
 end
 
-function bills2balance(stack, p_name)
+local function bills2balance(stack, p_name)
 	local bal = exchange:get_balance(p_name)
 	local name = stack:get_name()
 	local count = stack:get_count()
