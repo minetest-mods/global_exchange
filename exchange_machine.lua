@@ -198,66 +198,66 @@ minetest.after(0, function()
 			inv:add_item("main", item_name)
 			show_main(p_name, item_name)
 		end,
-  on_put = function(inv, listname, index, stack, player)
-    local p_name = player:get_player_name()
-    if listname == 'money' and minetest.get_item_group(stack:get_name(), 'minegeld') then
-      local old_balance = exchange:get_balance(p_name)
-      local balance = bills2balance(stack, p_name)
-      exchange:change_balance(p_name, balance - old_balance)
-      minetest.sound_play("atm_cash", {to_player = p_name})
-      local stacks = inv:get_list('money')
-      local tens = math.floor(balance/10)
-      if tens > 0 then
-        inv:set_stack('money', 1, 'currency:minegeld_10 ' .. tens)
-        balance = balance - tens * 10
-      else
-        inv:set_stack('money', 1, '')
-      end
-      local fives = math.floor(balance/5)
-      if fives > 0 then
-        inv:set_stack('money', 2, 'currency:minegeld_5 ' .. fives)
-        balance = balance - fives * 5
-      else
-        inv:set_stack('money', 2, '')
-      end
-      local ones = math.floor(balance)
-      if ones > 0 then
-        inv:set_stack('money', 3, 'currency:minegeld ' .. ones)
-        balance = balance - ones
-      else
-        inv:set_stack('money', 3, '')
-      end
-    end
-    minetest.show_formspec(p_name, "global_exchange:atm_form", cash_fs(p_name)) --redraw with new balance
-  end,
-  allow_put = function(inv, listname, index, stack, player)
-    local name = stack:get_name()
-    if listname == 'money' and minetest.get_item_group(name, 'minegeld') > 0 then
-      return stack:get_count()
-    end
-    return 0
-  end,
-  on_take = function(inv, listname, index, stack, player)
-    local p_name = player:get_player_name()
-    if listname == 'money' and minetest.get_item_group(stack:get_name(), 'minegeld') then
-      local name = stack:get_name()
-      local count = stack:get_count()
-      local delta
-      if name == 'currency:minegeld' then
-        delta = count
-      elseif name == 'currency:minegeld_5' then
-        delta = count * 5
-      elseif name == 'currency:minegeld_10' then
-        delta = count * 10
-      end
-      exchange:change_balance(p_name, -delta) --let's hope it always returns success
-      minetest.sound_play("atm_cash", {to_player = p_name})
-    end
-    minetest.show_formspec(p_name, "global_exchange:atm_form", cash_fs(p_name)) --redraw with new balance
-  end,
-  allow_take = function(inv, listname, index, stack, player)
-    return stack:get_count()
-  end,
+	on_put = function(inv, listname, index, stack, player)
+		local p_name = player:get_player_name()
+		if listname == 'money' and minetest.get_item_group(stack:get_name(), 'minegeld') then
+			local old_balance = exchange:get_balance(p_name)
+			local balance = bills2balance(stack, p_name)
+			exchange:change_balance(p_name, balance - old_balance)
+			minetest.sound_play("atm_cash", {to_player = p_name})
+			local stacks = inv:get_list('money')
+			local tens = math.floor(balance/10)
+			if tens > 0 then
+				inv:set_stack('money', 1, 'currency:minegeld_10 ' .. tens)
+				balance = balance - tens * 10
+			else
+				inv:set_stack('money', 1, '')
+			end
+			local fives = math.floor(balance/5)
+			if fives > 0 then
+				inv:set_stack('money', 2, 'currency:minegeld_5 ' .. fives)
+				balance = balance - fives * 5
+			else
+				inv:set_stack('money', 2, '')
+			end
+			local ones = math.floor(balance)
+			if ones > 0 then
+				inv:set_stack('money', 3, 'currency:minegeld ' .. ones)
+				balance = balance - ones
+			else
+				inv:set_stack('money', 3, '')
+			end
+		end
+		minetest.show_formspec(p_name, "global_exchange:atm_form", cash_fs(p_name)) --redraw with new balance
+	end,
+	allow_put = function(inv, listname, index, stack, player)
+		local name = stack:get_name()
+		if listname == 'money' and minetest.get_item_group(name, 'minegeld') > 0 then
+			return stack:get_count()
+		end
+		return 0
+	end,
+	on_take = function(inv, listname, index, stack, player)
+		local p_name = player:get_player_name()
+		if listname == 'money' and minetest.get_item_group(stack:get_name(), 'minegeld') then
+			local name = stack:get_name()
+			local count = stack:get_count()
+			local delta
+			if name == 'currency:minegeld' then
+				delta = count
+			elseif name == 'currency:minegeld_5' then
+				delta = count * 5
+			elseif name == 'currency:minegeld_10' then
+				delta = count * 10
+			end
+			exchange:change_balance(p_name, -delta) --let's hope it always returns success
+			minetest.sound_play("atm_cash", {to_player = p_name})
+		end
+		minetest.show_formspec(p_name, "global_exchange:atm_form", cash_fs(p_name)) --redraw with new balance
+	end,
+	allow_take = function(inv, listname, index, stack, player)
+		return stack:get_count()
+	end,
 	})
 
 	local selectable_list,n = {},1

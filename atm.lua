@@ -41,33 +41,33 @@ local function unique()
 end
 
 function cash_fs(p_name)
-  local balance = exchange:get_balance(p_name)
-  local formspec =
-    'size[8,9]'..
-    'label[0,0;' .. p_name .. '\'s account]' ..
-    'label[0,1;Balance: ' .. balance .. ']' ..
-    --money
-    'list[detached:global_exchange;money;0,2;3,1;]'..
-    --player inventory
-    'list[current_player;main;0,4;8,4;]'..
-    --back button
-    back(0,8)
---print(formspec)
-  return formspec
+	local balance = exchange:get_balance(p_name)
+	local formspec =
+		'size[8,9]'..
+		'label[0,0;' .. p_name .. '\'s account]' ..
+		'label[0,1;Balance: ' .. balance .. ']' ..
+		--money
+		'list[detached:global_exchange;money;0,2;3,1;]'..
+		--player inventory
+		'list[current_player;main;0,4;8,4;]'..
+		--back button
+		back(0,8)
+	--print(formspec)
+	return formspec
 end
 
 function bills2balance(stack, p_name)
-  local bal = exchange:get_balance(p_name)
-  local name = stack:get_name()
-  local count = stack:get_count()
-  if name == 'currency:minegeld' then
-    bal = bal + count
-  elseif name == 'currency:minegeld_5' then
-    bal = bal + count * 5
-  elseif name == 'currency:minegeld_10' then
-    bal = bal + count * 10
-  end
-  return bal
+	local bal = exchange:get_balance(p_name)
+	local name = stack:get_name()
+	local count = stack:get_count()
+	if name == 'currency:minegeld' then
+		bal = bal + count
+	elseif name == 'currency:minegeld_5' then
+		bal = bal + count * 5
+	elseif name == 'currency:minegeld_10' then
+		bal = bal + count * 10
+	end
+	return bal
 end
 
 local function wire_fs(p_name)
