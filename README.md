@@ -2,7 +2,7 @@
 
 This mod provides a server-wide trading exchange for items. It is available
 under GNU GPL version 3 or any later version. lsqlite3 is required by this mod,
-and can be installed through luarocks.
+and can be installed through luarocks. ($ sudo luarocks install lsqlite3)
 
 Nodes
 =====
@@ -98,4 +98,4 @@ is a sell offer for 5 cobblestone 3 credits each, it will give you 5 cobble
 immediately, and leave an order on the exchange for 5 more cobblestone.
 
 Once your offer is on the exchange, you can view or cancel it from the "Your
-Orders" menu. 
+Orders" menu.

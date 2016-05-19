@@ -1,4 +1,3 @@
-
 -- A telling machine. Call this file with the exchange argument.
 local exchange = ...
 
@@ -173,18 +172,127 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 end)
 
 
-minetest.register_node("global_exchange:atm", {
+minetest.register_node("global_exchange:atm_bottom", {
 	description = "ATM",
-	tiles = {"global_exchange_box.png",
-		"global_exchange_box.png",
-		"global_exchange_box.png^global_exchange_atm_side.png",
+	inventory_image = "global_exchange_atm_icon.png",
+	wield_image = "global_exchange_atm_hi_front.png",
+	drawtype = "nodebox",
+	tiles = {
+		"global_exchange_atm_lo_top.png",
+		"global_exchange_atm_side.png",
+		"global_exchange_atm_side.png",
+		"global_exchange_atm_side.png",
+		"global_exchange_atm_back.png^[transform2",
+		"global_exchange_atm_lo_front.png",
 	},
-	groups = {cracky=2},
+	paramtype = "light",
+	paramtype2 = "facedir",
+	is_ground_content = false,
+	stack_max = 1,
+	light_source = 3,
+	node_box = {
+		type = "fixed",
+		fixed = {
+		{-0.5, -0.5, -0.5, 0.5, 0.5, 0.5},
+		}
+	},
+	selection_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5, -0.5, -0.5, 0.5, 0.5, 0.5},
+			{-0.5, 0.5, -0.5, -0.375, 1.125, -0.25},
+			{0.375, 0.5, -0.5, 0.5, 1.125, -0.25},
+			{-0.5, 0.5, -0.25, 0.5, 1.5, 0.5},
+			{-0.5, 1.125, -0.4375, -0.375, 1.25, -0.25},
+			{0.375, 1.125, -0.4375, 0.5, 1.25, -0.25},
+			{-0.5, 1.25, -0.375, -0.375, 1.375, -0.25},
+			{0.375, 1.25, -0.375, 0.5, 1.375, -0.25},
+			{-0.5, 1.375, -0.3125, -0.375, 1.5, -0.25},
+			{0.375, 1.375, -0.3125, 0.5, 1.5, -0.25},
+		},
+	},
+	on_place = function(itemstack, placer, pointed_thing)
+		local under = pointed_thing.under
+		local pos
+		if minetest.registered_items[minetest.get_node(under).name].buildable_to then
+			pos = under
+		else
+			pos = pointed_thing.above
+		end
+		if minetest.is_protected(pos, placer:get_player_name()) and
+				not minetest.check_player_privs(placer, "protection_bypass") then
+			minetest.record_protection_violation(pos, placer:get_player_name())
+			return itemstack
+		end
+		local def = minetest.registered_nodes[minetest.get_node(pos).name]
+		if not def or not def.buildable_to then
+			minetest.remove_node(pos)
+			return itemstack
+		end
+		local dir = minetest.dir_to_facedir(placer:get_look_dir())
+		local pos2 = {x = pos.x, y = pos.y + 1, z = pos.z}
+		local def2 = minetest.registered_nodes[minetest.get_node(pos2).name]
+		if not def2 or not def2.buildable_to then
+			return itemstack
+		end
+		minetest.set_node(pos, {name = "global_exchange:atm_bottom", param2 = dir})
+		minetest.set_node(pos2, {name = "global_exchange:atm_top", param2 = dir})
+		if not minetest.setting_getbool("creative_mode") then
+			itemstack:take_item()
+			return itemstack
+		end
+	end,
+	on_destruct = function(pos)
+		local pos2 = {x = pos.x, y = pos.y + 1, z = pos.z}
+		local n2 = minetest.get_node(pos2)
+		if minetest.get_item_group(n2.name, "atm") == 2 then
+			minetest.remove_node(pos2)
+		end
+	end,
+	groups = {cracky=2, atm = 1},
 	on_rightclick = function(pos, _, clicker)
+		minetest.sound_play("atm_beep", {pos = pos})
 		minetest.show_formspec(clicker:get_player_name(), atm_form, main_menu)
 	end,
 })
 
+minetest.register_node("global_exchange:atm_top", {
+	drawtype = "nodebox",
+	tiles = {
+		"global_exchange_atm_hi_top.png",
+		"global_exchange_atm_side.png",--not visible anyway
+		"global_exchange_atm_side.png",
+		"global_exchange_atm_side.png",
+		"global_exchange_atm_back.png",
+		"global_exchange_atm_hi_front.png",
+	},
+	paramtype = "light",
+	paramtype2 = "facedir",
+	is_ground_content = false,
+	light_source = 3,
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.5, -0.5, -0.5, -0.375, 0.125, -0.25},
+			{0.375, -0.5, -0.5, 0.5, 0.125, -0.25},
+			{-0.5, -0.5, -0.25, 0.5, 0.5, 0.5},
+			{-0.5, 0.125, -0.4375, -0.375, 0.25, -0.25},
+			{0.375, 0.125, -0.4375, 0.5, 0.25, -0.25},
+			{-0.5, 0.25, -0.375, -0.375, 0.375, -0.25},
+			{0.375, 0.25, -0.375, 0.5, 0.375, -0.25},
+			{-0.5, 0.375, -0.3125, -0.375, 0.5, -0.25},
+			{0.375, 0.375, -0.3125, 0.5, 0.5, -0.25},
+		}
+	},
+	selection_box = {
+		type = "fixed",
+		fixed = {0, 0, 0, 0, 0, 0},
+	},
+	groups = {
+		atm = 2,
+		not_in_creative_inventory = 1
+	},
+})
 
 minetest.register_craft( {
 	output = "global_exchange:atm",
@@ -194,3 +302,5 @@ minetest.register_craft( {
 		{ "default:stone", "default:stone", "default:stone" },
 	}
 })
+
+minetest.register_alias("global_exchange:atm", "global_exchange:atm_bottom")
