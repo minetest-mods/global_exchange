@@ -251,7 +251,7 @@ minetest.register_node("global_exchange:atm_bottom", {
 	end,
 	groups = {cracky=2, atm = 1},
 	on_rightclick = function(pos, _, clicker)
-		minetest.sound_play("atm_beep", {pos = pos})
+		minetest.sound_play("atm_beep", {pos = pos, gain = 0.3, max_hear_distance = 5})
 		minetest.show_formspec(clicker:get_player_name(), atm_form, main_menu)
 	end,
 })
