@@ -57,6 +57,7 @@ local main_state = {}
 --     sell: A boolean whether the player has sell selected
 
 minetest.register_on_joinplayer(function(player)
+	exchange:new_account(player:get_player_name()) --just to make sure
 	main_state[player:get_player_name()] = {
 		old_fields = {},
 		search_results = {},

@@ -5,7 +5,6 @@ local atm_form = "global_exchange:atm_form"
 
 local main_menu =[[
 size[6,2]
-button[0,0;2,1;new_account;New Account]
 button[2,0;2,1;info;Account Info]
 button[4,0;2,1;wire;Wire Monies]
 button[1,1;4,1;transaction_log;Transaction Log]
@@ -35,20 +34,6 @@ local function unique()
 	unique_num = unique_num + 1
 
 	return ret
-end
-
-
-local function new_account_fs(p_name)
-	local act_suc, err = exchange:new_account(p_name)
-
-	local fs
-	if not act_suc then
-		fs = label(0.5,0.5, "Error: " .. err)
-	else
-		fs = label(0.5,0.5, "Congratulations on \nyour new account.")
-	end
-
-	return "size[4,3]" .. fs .. logout(0.5,2)
 end
 
 
@@ -145,10 +130,6 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 	if fields.logout then
 		minetest.show_formspec(p_name, atm_form, main_menu)
-	end
-
-	if fields.new_account then
-		minetest.show_formspec(p_name, atm_form, new_account_fs(p_name))
 	end
 
 	if fields.info then
