@@ -1,5 +1,6 @@
 
-local sql = require("lsqlite3")
+local insecure_env = ...
+local sql = insecure_env.require("lsqlite3")
 local exports = {}
 
 local init_query = [=[
